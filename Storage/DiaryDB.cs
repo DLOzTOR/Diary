@@ -4,8 +4,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Data.Sqlite;
-using static System.Net.Mime.MediaTypeNames;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Storage
 {
@@ -13,7 +11,8 @@ namespace Storage
     {
         public DiaryDB(string path, out StorageCreateError createStatus) : base(path, out createStatus)
         {
-            string createTableQuery = "CREATE TABLE IF NOT EXISTS Records(Id INTEGER PRIMARY KEY NOT NULL, Date DATETIME NOT NULL, Text TEXT NOT NULL)";
+            string createTableQuery = "CREATE TABLE Records(Id INTEGER PRIMARY KEY NOT NULL, Date DATETIME NOT NULL, Text TEXT NOT NULL)";
+            Console.WriteLine(createStatus);
             using (SqliteCommand command = new SqliteCommand(createTableQuery, connection))
             {
                 try 
@@ -29,7 +28,11 @@ namespace Storage
 #endif
                 }
             }
+        }        
+        public DiaryDB(string path, out StorageOpenError openStatus) : base(path, out openStatus)
+        {
         }
+
         public bool Add(DateTime dateTime, string text)
         {
             connection.Open();
@@ -46,6 +49,26 @@ namespace Storage
                     return false;
                 }
             }
+        }
+        public List<DiaryRecord> GetAllData()
+        {
+            var data = new List<DiaryRecord>();
+            string select = "SELECT * FROM Records";
+            connection.Open();
+            using (SqliteCommand cmd = new SqliteCommand(select, connection))
+            {
+                using (SqliteDataReader reader = cmd.ExecuteReader())
+                {
+                    while (reader.Read())
+                    {
+                        int id = reader.GetInt32(reader.GetOrdinal("Id"));
+                        DateTime dateTime = reader.GetDateTime(reader.GetOrdinal("Date"));
+                        string text = reader.GetString(reader.GetOrdinal("Text"));
+                        data.Add(new DiaryRecord(id, dateTime, text));
+                    }
+                }
+            }
+            return data;
         }
     }
 }
