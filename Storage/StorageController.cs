@@ -9,8 +9,8 @@ namespace Storage
         bool isStorageLoad = false;
         public StorageController()
         {
-            //recentb = new RecentDB( out var cr, out var or);
-            //Console.WriteLine($"{cr} + {or}");
+            recentb = new RecentDB(out var cr, out var or);
+            Console.WriteLine($"{cr} + {or}");
         }
         public StorageCreateError CreateDB(string path)
         {
@@ -22,6 +22,10 @@ namespace Storage
             {
                 isStorageLoad = true;
                 db = new DiaryDB(path, out StorageCreateError createError);
+                if(createError == StorageCreateError.None)
+                {
+                    recentb.Add(path);
+                }
                 return createError;
             }
         }
@@ -29,6 +33,10 @@ namespace Storage
         {
             isStorageLoad = true;
             db = new DiaryDB(path, out StorageOpenError openError);
+            if(openError == StorageOpenError.None)
+            {
+                recentb.Add(path);
+            }
             return openError;
         }
         public bool Add(DateTime dateTime, string text)
